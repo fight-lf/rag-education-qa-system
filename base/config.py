@@ -1,0 +1,96 @@
+# base/config.py
+# 导入配置解析库
+import configparser
+# 导入路径操作库
+import os
+import sys
+
+# from logger import logger  # 程序会报错， 切记：开发的时候，避免文件内部相互循环调用，logger内调用config,config内调用logger
+
+'''
+    重点：是把config.ini的文件路径添加到环境变量里面
+'''
+# print(sys.path) # 查看系统路径
+dirname = os.path.dirname(__file__) # 查看当前脚本所在的文件夹
+qa_pathname = os.path.dirname(dirname)
+# print(qa_pathname)  # 项目根目录
+# 把工程路径添加到系统环境变量里面
+sys.path.insert(0,qa_pathname) # insert 在列表里面指定位置插入
+# 拼接config.ini的路径
+# 配置文件仅保存在本地，不提交到版本库
+config_path = os.path.join(qa_pathname,'config.ini')
+print(f'config的文件路径：{config_path}')
+
+class Config:
+    # 初始化配置，加载 config.ini 文件
+    def __init__(self, config_file=config_path):
+        # 创建配置解析器
+        self.config = configparser.ConfigParser()
+        # 读取配置文件
+        self.config.read(config_file,encoding='utf-8')
+
+        # MySQL 配置
+        # MySQL 主机地址                     节点      key            默认值
+        self.MYSQL_HOST = self.config.get('mysql', 'host', fallback='localhost')
+        # MySQL 用户名
+        self.MYSQL_USER = self.config.get('mysql', 'user', fallback='root')
+        # MySQL 密码
+        self.MYSQL_PASSWORD = self.config.get('mysql', 'password', fallback='')
+        # MySQL 数据库名
+        self.MYSQL_DATABASE = self.config.get('mysql', 'database', fallback='subjects_kg')
+
+        # Redis 配置
+        # Redis 主机地址
+        self.REDIS_HOST = self.config.get('redis', 'host', fallback='localhost')
+        # Redis 端口
+        self.REDIS_PORT = self.config.getint('redis', 'port', fallback=6379)
+        # Redis 密码
+        self.REDIS_PASSWORD = self.config.get('redis', 'password', fallback='')
+        # Redis 数据库编号
+        self.REDIS_DB = self.config.getint('redis', 'db', fallback=0)
+
+        # 日志文件路径
+        self.LOG_FILE = self.config.get('logger', 'log_file', fallback='logs/app.log')
+
+        # Milvus 配置
+        # Milvus 主机地址
+        self.MILVUS_HOST = self.config.get('milvus', 'host', fallback='localhost')
+        # Milvus 端口
+        self.MILVUS_PORT = self.config.get('milvus', 'port', fallback='19530')
+        # Milvus 数据库名
+        self.MILVUS_DATABASE_NAME = self.config.get('milvus', 'database_name', fallback='itcast')
+        # Milvus 集合名
+        self.MILVUS_COLLECTION_NAME = self.config.get('milvus', 'collection_name', fallback='edurag_final')
+
+        # LLM 配置
+        # LLM 模型名
+        self.LLM_MODEL = self.config.get('llm', 'model', fallback='qwen3.6-flash')
+        # DashScope API 密钥
+        self.DASHSCOPE_API_KEY = self.config.get('llm', 'dashscope_api_key')
+        # DashScope API 地址
+        self.DASHSCOPE_BASE_URL = self.config.get('llm', 'dashscope_base_url',
+                                                  fallback='https://dashscope.aliyuncs.com/compatible-mode/v1')
+
+        # 检索参数
+        # 父块大小
+        self.PARENT_CHUNK_SIZE = self.config.getint('retrieval', 'parent_chunk_size', fallback=1200)
+        # 子块大小
+        self.CHILD_CHUNK_SIZE = self.config.getint('retrieval', 'child_chunk_size', fallback=300)
+        # 块重叠大小
+        self.CHUNK_OVERLAP = self.config.getint('retrieval', 'chunk_overlap', fallback=50)
+        # 检索返回数量
+        self.RETRIEVAL_K = self.config.getint('retrieval', 'retrieval_k', fallback=5)
+        # 最终候选数量
+        self.CANDIDATE_M = self.config.getint('retrieval', 'candidate_m', fallback=2)
+
+        # 应用配置
+        self.CUSTOMER_SERVICE_PHONE = self.config.get('app', 'customer_service_phone')
+        self.VALID_SOURCES = eval(
+            self.config.get('app', 'valid_sources', fallback=["ai", "java", "test", "ops", "bigdata"]))
+
+if __name__ == '__main__':
+    # file = os.path.join(qa_pathname, 'logs', 'app.log')
+    # config = Config(file)
+    config = Config()
+    print('**'*20)
+    print(config.LOG_FILE)
